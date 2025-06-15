@@ -3,9 +3,7 @@ const { default: mongoose } = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 const bodyParser = require("body-parser");
-// const userRoutes = require("./routes/userRoutes");
-// const destinationRoutes = require("./routes/destinationroutes");
-// const reviewRoutes = require("./routes/reviewRoutes");
+const studentRoutes = require("./routes/studentRoutes");
 const cookieParser = require("cookie-parser");
 
 const app = express();
@@ -16,7 +14,7 @@ app.use(bodyParser.json({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "your-production-domain"], // Add your frontend domains
+    origin: ["http://localhost:5173", "your-production-domain"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -25,7 +23,7 @@ app.use(
 
 // routes
 
-// app.use("/user", userRoutes);
+app.use("/student", studentRoutes);
 // app.use("/destination", destinationRoutes);
 // app.use("/reviews", reviewRoutes);
 

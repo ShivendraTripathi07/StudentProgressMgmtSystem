@@ -1,9 +1,15 @@
-import React from 'react'
-
+import React from "react";
+import { Outlet } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 const App = () => {
   return (
-    <div className='bg-black text-white'>App</div>
-  )
-}
+    <>
+      <ToastContainer position="top-right" />
+      <main className="mt-0 overflow-y-hidden">
+        <Outlet />
+      </main>
+    </>
+  );
+};
 
-export default App
+export default App;
