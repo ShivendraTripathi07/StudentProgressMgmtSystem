@@ -29,19 +29,26 @@ const StudentProfile = () => {
         const studentData = await studentRes.json();
         setStudent(studentData.data);
 
-        if (studentData.cfHandle) {
+        if (studentData.data?.cfHandle) {
           // Fetch Codeforces data
+          console.log(studentData.data?.cfHandle);
           const [contestRes, submissionRes] = await Promise.all([
             fetch(
-              `https://codeforces.com/api/user.rating?handle=${studentData.cfHandle}`
+              `https://codeforces.com/api/user.rating?handle=${studentData.data.cfHandle}`
             ),
             fetch(
-              `https://codeforces.com/api/user.status?handle=${studentData.cfHandle}`
+              `https://codeforces.com/api/user.status?handle=${studentData.data.cfHandle}`
             ),
           ]);
 
           const contestData = await contestRes.json();
           const submissionData = await submissionRes.json();
+          console.log(contestRes);
+          // console.log("Contest Result Length:", contestData.result.length);
+          // console.log(
+          //   "Submission Result Length:",
+          //   submissionData.result.length
+          // );
 
           setContestData(contestData.result || []);
           setSubmissions(submissionData.result || []);
@@ -156,6 +163,7 @@ const StudentProfile = () => {
                     <option value={7}>Last 7 days</option>
                     <option value={30}>Last 30 days</option>
                     <option value={90}>Last 90 days</option>
+                    <option value={365}>Last 365 days</option>
                   </select>
                 </div>
               </div>
