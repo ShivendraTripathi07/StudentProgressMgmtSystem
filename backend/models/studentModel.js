@@ -8,6 +8,7 @@ const studentSchema = new mongoose.Schema({
   currentRating: Number,
   maxRating: Number,
   lastSynced: Date,
+  lastCFSubmission: { type: Date, default: null },
   autoEmailEnabled: Boolean,
   reminderCount: Number,
 });

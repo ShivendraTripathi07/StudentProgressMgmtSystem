@@ -5,7 +5,7 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const studentRoutes = require("./routes/studentRoutes");
 const cookieParser = require("cookie-parser");
-
+const { startCronJob } = require("./services/cfCronService.js");
 const app = express();
 app.use(express.json({ limit: "20mb" })); // adjust as needed
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
@@ -41,5 +41,6 @@ connectDB().then(() => {
   app.listen(PORT, () => {
     console.log("mongodb connected");
     console.log(`server is running on port ${PORT}`);
+    startCronJob();
   });
 });

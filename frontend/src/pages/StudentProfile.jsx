@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { User, Filter } from "lucide-react";
 import RatingGraph from "../components/RatingGraph";
@@ -6,7 +6,7 @@ import ContestTable from "../components/ContestTable";
 import ProblemStats from "../components/ProblemStats";
 import RatingBucketChart from "../components/RatingBucketChart";
 import HeatMapChart from "../components/HeatMapChart";
-
+import { useNavigate } from "react-router-dom";
 const StudentProfile = () => {
   const [student, setStudent] = useState(null);
   const [contestData, setContestData] = useState([]);
@@ -16,6 +16,8 @@ const StudentProfile = () => {
   const [contestFilter, setContestFilter] = useState(365);
   const [problemFilter, setProblemFilter] = useState(90);
   const { studentId } = useParams();
+  const navigate = useNavigate();
+
   const API_BASE = "http://localhost:8000/student";
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +33,7 @@ const StudentProfile = () => {
 
         if (studentData.data?.cfHandle) {
           // Fetch Codeforces data
-          console.log(studentData.data?.cfHandle);
+          // console.log(studentData.data?.cfHandle);
           const [contestRes, submissionRes] = await Promise.all([
             fetch(
               `https://codeforces.com/api/user.rating?handle=${studentData.data.cfHandle}`
@@ -43,7 +45,7 @@ const StudentProfile = () => {
 
           const contestData = await contestRes.json();
           const submissionData = await submissionRes.json();
-          console.log(contestRes);
+          // console.log(contestRes);
           // console.log("Contest Result Length:", contestData.result.length);
           // console.log(
           //   "Submission Result Length:",
@@ -98,7 +100,7 @@ const StudentProfile = () => {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6 flex justify-between">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
               <User className="w-8 h-8 text-white" />
@@ -110,9 +112,18 @@ const StudentProfile = () => {
               <p className="text-gray-600">
                 Codeforces: {student.cfHandle || "Not provided"}
               </p>
-              <p className="text-sm text-gray-500">Student ID: {studentId}</p>
+              {/* {console.log(student)} */}
+              <p className="text-sm text-gray-500">
+                Student Email: {student.email}
+              </p>
             </div>
           </div>
+          <button
+            onClick={() => navigate("/")}
+            className="cursor-pointer h-12 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition"
+          >
+            Go Home
+          </button>
         </div>
 
         {student.cfHandle ? (

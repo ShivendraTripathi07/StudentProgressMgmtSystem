@@ -9,24 +9,20 @@ import {
   Search,
   X,
   Save,
-  UserPlus,
+  Clock,
   Mail,
-  Phone,
-  Trophy,
-  TrendingUp,
-  Calendar,
-  Bell,
-  Hash,
+  Send,
 } from "lucide-react";
 import { toast } from "react-toastify";
-
+import CronSettings from "../components/CronScheduling";
+import axios from "axios";
 const Home = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [lastSynced, setLastSynced] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -43,15 +39,26 @@ const Home = () => {
   const API_BASE = "http://localhost:8000/student"; // Change this to your actual API base URL
 
   // Fetch all students
+
+  const sendForInactivity = async () => {
+    const response = await fetch(`${API_BASE}/test-fetch`);
+    console.log(response);
+    if (response) {
+      toast.success("Email for inactivity send successfully");
+    } else {
+      toast.error("Error");
+    }
+    // console.log(response);
+  };
   const fetchStudents = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE}/getAllStudents`);
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       setStudents(data.data);
     } catch (error) {
-      console.error("Error fetching students:", error);
+      toast.error("Error fetching students:", error);
     } finally {
       setLoading(false);
     }
@@ -132,20 +139,6 @@ const Home = () => {
     }
   };
 
-  // Get particular student details
-  // const getStudentDetails = async (studentId) => {
-  //   try {
-  //     const response = await fetch(
-  //       `${API_BASE}/particularStudent/${studentId}`
-  //     );
-  //     const data = await response.json();
-  //     setSelectedStudent(data.data);
-  //     setShowDetailsModal(true);
-  //   } catch (error) {
-  //     console.error("Error fetching student details:", error);
-  //   }
-  // };
-
   // Download CSV
   const downloadCSV = () => {
     const headers = [
@@ -205,9 +198,6 @@ const Home = () => {
     setSelectedStudent(student);
     setShowEditModal(true);
   };
-  //   {
-  //     console.log(filteredStudents);
-  //   }
 
   // Filter students based on search term
   const filteredStudents = Array.isArray(students)
@@ -218,8 +208,17 @@ const Home = () => {
           student.cfHandle.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
+
+  // Last SYnced
+  const getLastSync = async () => {
+    const res = await fetch(`${API_BASE}/last-sync`);
+
+    setLastSynced(new Date(res.data?.lastSynced));
+    console.log(lastSynced);
+  };
   useEffect(() => {
     fetchStudents();
+    getLastSync();
   }, []);
 
   if (loading) {
@@ -231,131 +230,167 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Student Management
+        {/* Header with Cron Settings */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+              Student Management System
             </h1>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Clock size={16} className="text-blue-500" />
+              <span>
+                Last updated:{" "}
+                {lastSynced ? lastSynced.toLocaleString() : "Loading..."}
+              </span>
+            </div>
+          </div>
+          <div className="flex justify-between gap-2">
+            <div>
+              <CronSettings />
+            </div>
+
+            <button
+              onClick={sendForInactivity}
+              className="cursor-pointer group relative inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium text-sm rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 border border-transparent hover:border-white/20"
+            >
+              <Mail
+                size={16}
+                className="transition-transform duration-200 group-hover:scale-110"
+              />
+              <span>Send Inactivity Alerts</span>
+              <Send
+                size={14}
+                className="opacity-70 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0.5"
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="flex gap-3">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 <Plus size={20} />
                 Add Student
               </button>
               <button
                 onClick={downloadCSV}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 <Download size={20} />
-                Download CSV
+                Export CSV
               </button>
             </div>
-          </div>
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Search students by name, email, or CF handle..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            {/* Enhanced Search Bar */}
+            <div className="relative w-full lg:w-96">
+              <Search
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search students by name, email, or CF handle..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-300"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Students Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        {/* Enhanced Students Table */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Phone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     CF Handle
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Current Rating
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Max Rating
                   </th>
-                  <th className=" mx-3 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
-                  <tr key={student._id} className="hover:bg-gray-50">
+              <tbody className="bg-white/50 divide-y divide-gray-100">
+                {filteredStudents.map((student, index) => (
+                  <tr
+                    key={student._id}
+                    className="hover:bg-white/80 transition-all duration-200 group"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-semibold text-gray-900">
                         {student.name}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-700">
                         {student.email}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-700">
                         {student.phone}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 font-mono">
+                      <div className="text-sm text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">
                         {student.cfHandle}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border border-blue-200">
                         {student.currentRating}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
                         {student.maxRating}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() =>
-                            navigate(`/getStudentDetail/${student._id}`)
-                          }
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                          onClick={() => {
+                            navigate(`/getStudentDetail/${student._id}`);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
                           title="View Details"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => openEditModal(student)}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
+                          className="text-indigo-600 hover:text-indigo-800 p-2 rounded-lg hover:bg-indigo-50 transition-all duration-200"
                           title="Edit"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => deleteStudent(student._id)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                          className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-all duration-200"
                           title="Delete"
                         >
                           <Trash2 size={16} />
@@ -368,24 +403,33 @@ const Home = () => {
             </table>
           </div>
           {filteredStudents.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No students found</p>
+            <div className="text-center py-16">
+              <div className="text-gray-400 mb-2">
+                <Search size={48} className="mx-auto" />
+              </div>
+              <p className="text-gray-500 text-lg font-medium">
+                No students found
+              </p>
+              <p className="text-gray-400 text-sm">
+                Try adjusting your search criteria
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Add Student Modal */}
+      {/* Enhanced Add Student Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-100 transform transition-all duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Plus size={20} className="text-blue-600" />
                 Add New Student
               </h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all duration-200"
               >
                 <X size={24} />
               </button>
@@ -393,30 +437,30 @@ const Home = () => {
             <div className="space-y-4">
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Full Name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="Email Address"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
               <input
-                type="text"
-                placeholder="Phone"
+                type="tel"
+                placeholder="Phone Number"
                 value={formData.phone}
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
               <input
                 type="text"
@@ -425,10 +469,9 @@ const Home = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, cfHandle: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono transition-all duration-200"
               />
-
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all duration-200">
                 <input
                   type="checkbox"
                   checked={formData.autoEmailEnabled}
@@ -438,22 +481,24 @@ const Home = () => {
                       autoEmailEnabled: e.target.checked,
                     })
                   }
-                  className="rounded"
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700">Enable Auto Email</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Enable Auto Email Notifications
+                </span>
               </label>
             </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={addStudent}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Save size={16} />
                 Add Student
               </button>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-lg"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg transition-all duration-200"
               >
                 Cancel
               </button>
@@ -462,15 +507,18 @@ const Home = () => {
         </div>
       )}
 
-      {/* Edit Student Modal */}
+      {/* Enhanced Edit Student Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Edit Student</h2>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-100 transform transition-all duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Edit size={20} className="text-indigo-600" />
+                Edit Student
+              </h2>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all duration-200"
               >
                 <X size={24} />
               </button>
@@ -478,30 +526,30 @@ const Home = () => {
             <div className="space-y-4">
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Full Name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               />
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="Email Address"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               />
               <input
-                type="text"
-                placeholder="Phone"
+                type="tel"
+                placeholder="Phone Number"
                 value={formData.phone}
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               />
               <input
                 type="text"
@@ -510,27 +558,29 @@ const Home = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, cfHandle: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono transition-all duration-200"
               />
-              <input
-                type="number"
-                placeholder="Current Rating"
-                value={formData.currentRating}
-                onChange={(e) =>
-                  setFormData({ ...formData, currentRating: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="number"
-                placeholder="Max Rating"
-                value={formData.maxRating}
-                onChange={(e) =>
-                  setFormData({ ...formData, maxRating: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-              <label className="flex items-center gap-2">
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  placeholder="Current Rating"
+                  value={formData.currentRating}
+                  onChange={(e) =>
+                    setFormData({ ...formData, currentRating: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                />
+                <input
+                  type="number"
+                  placeholder="Max Rating"
+                  value={formData.maxRating}
+                  onChange={(e) =>
+                    setFormData({ ...formData, maxRating: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                />
+              </div>
+              <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all duration-200">
                 <input
                   type="checkbox"
                   checked={formData.autoEmailEnabled}
@@ -540,179 +590,27 @@ const Home = () => {
                       autoEmailEnabled: e.target.checked,
                     })
                   }
-                  className="rounded"
+                  className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700">Enable Auto Email</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Enable Auto Email Notifications
+                </span>
               </label>
             </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => updateStudent(selectedStudent._id)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Save size={16} />
                 Update Student
               </button>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-lg"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg transition-all duration-200"
               >
                 Cancel
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Student Details Modal */}
-      {showDetailsModal && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Student Details
-              </h2>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">
-                  Personal Information
-                </h3>
-
-                <div className="flex items-center gap-3">
-                  <UserPlus className="text-blue-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Name</p>
-                    <p className="font-medium">{selectedStudent.name}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Mail className="text-green-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-medium">{selectedStudent.email}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Phone className="text-purple-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p className="font-medium">{selectedStudent.phone}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Codeforces Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">
-                  Codeforces Progress
-                </h3>
-
-                <div className="flex items-center gap-3">
-                  <Hash className="text-indigo-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Handle</p>
-                    <p className="font-medium font-mono">
-                      {selectedStudent.cfHandle}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Trophy className="text-yellow-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Current Rating</p>
-                    <p className="font-bold text-lg text-blue-600">
-                      {selectedStudent.currentRating}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="text-red-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Max Rating</p>
-                    <p className="font-bold text-lg text-green-600">
-                      {selectedStudent.maxRating}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Calendar className="text-gray-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Last Synced</p>
-                    <p className="font-medium">
-                      {selectedStudent.lastSynced
-                        ? new Date(
-                            selectedStudent.lastSynced
-                          ).toLocaleDateString()
-                        : "Never"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Bell className="text-orange-600" size={20} />
-                  <div>
-                    <p className="text-sm text-gray-500">Auto Email</p>
-                    <p className="font-medium">
-                      {selectedStudent.autoEmailEnabled
-                        ? "Enabled"
-                        : "Disabled"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Rating Progress */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-                Rating Progress
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">
-                    Progress to Max Rating
-                  </span>
-                  <span className="text-sm font-medium">
-                    {selectedStudent.currentRating} /{" "}
-                    {selectedStudent.maxRating}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(
-                        (selectedStudent.currentRating /
-                          selectedStudent.maxRating) *
-                          100,
-                        100
-                      )}%`,
-                    }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {selectedStudent.currentRating === selectedStudent.maxRating
-                    ? "At peak rating!"
-                    : `${
-                        selectedStudent.maxRating -
-                        selectedStudent.currentRating
-                      } points to reach max rating`}
-                </p>
-              </div>
             </div>
           </div>
         </div>

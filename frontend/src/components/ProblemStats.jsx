@@ -5,12 +5,10 @@ import {
   getMaxRatingProblem,
 } from "../utils";
 
-import React from "react";
-
 import { TrendingUp, Award, Target, Clock, Star } from "lucide-react";
 
 const ProblemStats = ({ submissions, timeFilter }) => {
-  console.log(submissions.length, timeFilter);
+  // console.log(submissions.length, timeFilter);
   const filteredSubmissions = filterByDateRange(submissions, timeFilter);
   const maxRatingProblem = getMaxRatingProblem(filteredSubmissions);
   const uniqueSolved = countUniqueSolvedProblems(filteredSubmissions);
