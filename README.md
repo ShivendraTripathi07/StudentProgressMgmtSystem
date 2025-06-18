@@ -4,96 +4,6 @@ A comprehensive full-stack MERN web application designed to manage students and 
 
 ---
 
-## 🗂 Project Structure
-
-```
-student-progress-tracker/
-├── backend/                          # Express.js Backend Server
-│   ├── config/                       # Database and app configuration
-│   │   ├── database.js              # MongoDB connection setup
-│   │   └── config.js                # Environment variables config
-│   ├── controllers/                  # Request handlers and business logic
-│   │   ├── studentController.js     # Student CRUD operations
-│   │   ├── codeforcesController.js  # CF API integration logic
-│   │   └── emailController.js       # Email notification handlers
-│   ├── models/                       # Mongoose data schemas
-│   │   ├── Student.js               # Student profile schema
-│   │   ├── Contest.js               # Contest data schema
-│   │   └── Submission.js            # Problem submission schema
-│   ├── routes/                       # API endpoint definitions
-│   │   ├── students.js              # Student management routes
-│   │   ├── codeforces.js            # CF data sync routes
-│   │   └── notifications.js         # Email notification routes
-│   ├── services/                     # External integrations & utilities
-│   │   ├── codeforcesAPI.js         # Codeforces API wrapper
-│   │   ├── cronService.js           # Scheduled task management
-│   │   ├── emailService.js          # Email delivery service
-│   │   └── dataProcessor.js         # Data analysis utilities
-│   ├── middleware/                   # Express middleware
-│   │   ├── auth.js                  # Authentication middleware
-│   │   ├── validation.js            # Input validation
-│   │   └── errorHandler.js          # Global error handling
-│   ├── utils/                        # Helper functions
-│   │   ├── dateHelpers.js           # Date manipulation utilities
-│   │   └── validators.js            # Data validation helpers
-│   ├── .env                         # Environment variables
-│   ├── package.json                 # Backend dependencies
-│   └── server.js                    # Main application entry point
-├── frontend/                         # React Frontend Application
-│   ├── public/                       # Static assets
-│   │   ├── index.html               # HTML template
-│   │   └── favicon.ico              # Application icon
-│   ├── src/                         # Source code
-│   │   ├── components/              # Reusable UI components
-│   │   │   ├── common/              # Shared components
-│   │   │   │   ├── Header.jsx       # Navigation header
-│   │   │   │   ├── Footer.jsx       # Page footer
-│   │   │   │   └── LoadingSpinner.jsx # Loading indicator
-│   │   │   ├── students/            # Student-related components
-│   │   │   │   ├── StudentTable.jsx # Main student listing
-│   │   │   │   ├── StudentForm.jsx  # Add/Edit student form
-│   │   │   │   └── StudentCard.jsx  # Individual student display
-│   │   │   ├── charts/              # Data visualization components
-│   │   │   │   ├── RatingChart.jsx  # Contest rating graphs
-│   │   │   │   ├── ProblemChart.jsx # Problem solving analytics
-│   │   │   │   └── HeatmapChart.jsx # Submission activity heatmap
-│   │   │   └── profile/             # Student profile components
-│   │   │       ├── ContestHistory.jsx # Contest performance view
-│   │   │       └── ProblemStats.jsx   # Problem solving statistics
-│   │   ├── pages/                   # Main application pages
-│   │   │   ├── Home.jsx             # Dashboard/landing page
-│   │   │   ├── StudentsList.jsx     # Student management page
-│   │   │   ├── StudentProfile.jsx   # Detailed student view
-│   │   │   └── Settings.jsx         # Application settings
-│   │   ├── hooks/                   # Custom React hooks
-│   │   │   ├── useStudents.js       # Student data management
-│   │   │   ├── useCodeforces.js     # CF API integration
-│   │   │   └── useNotifications.js  # Alert management
-│   │   ├── services/                # API communication layer
-│   │   │   ├── api.js               # Base API configuration
-│   │   │   ├── studentService.js    # Student API calls
-│   │   │   └── codeforcesService.js # CF data fetching
-│   │   ├── utils/                   # Frontend utilities
-│   │   │   ├── formatters.js        # Data formatting helpers
-│   │   │   ├── csvExport.js         # CSV download functionality
-│   │   │   └── dateUtils.js         # Date manipulation
-│   │   ├── styles/                  # CSS and styling
-│   │   │   └── index.css            # Global styles (Tailwind)
-│   │   ├── App.jsx                  # Main React component
-│   │   └── main.jsx                 # Application entry point
-│   ├── package.json                 # Frontend dependencies
-│   ├── vite.config.js              # Vite build configuration
-│   └── tailwind.config.js          # Tailwind CSS configuration
-├── docs/                            # Documentation
-│   ├── API.md                       # API documentation
-│   └── DEPLOYMENT.md                # Deployment guide
-├── .gitignore                       # Git ignore rules
-├── package.json                     # Root package configuration
-└── README.md                        # Project documentation
-```
-
----
-
 ## 🚀 Features
 
 ### 🧍 Student Management Dashboard
@@ -218,7 +128,6 @@ student-progress-tracker/
 - 📡 **Axios** for external API communication
 - ⏰ **node-cron** for scheduled task management
 - 📬 **Nodemailer** for email delivery services
-- 🔒 **bcrypt** for data security (if authentication added)
 
 ---
 
@@ -233,8 +142,9 @@ student-progress-tracker/
 ### 1. Repository Setup
 
 ```bash
-git clone https://github.com/yourusername/student-progress-tracker.git
-cd student-progress-tracker
+git clone https://github.com/ShivendraTripathi07/StudentProgressMgmtSystem.git
+cd StudentProgressMgmtSystem
+
 ```
 
 ### 2. Backend Configuration
@@ -252,8 +162,7 @@ MONGO_URI=your_mongodb_connection_string
 EMAIL_USER=your_email@example.com
 EMAIL_PASS=your_email_app_password
 EMAIL_SERVICE=gmail
-FRONTEND_URL=http://localhost:5173
-CODEFORCES_API_BASE=https://codeforces.com/api
+
 ```
 
 Start the backend server:
