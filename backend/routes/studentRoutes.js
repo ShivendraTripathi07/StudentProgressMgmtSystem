@@ -5,8 +5,10 @@ const particularStudentController = require("./../controllers/student/particular
 const updateStudent = require("../controllers/student/updateStudent");
 const deleteStudent = require("../controllers/student/deleteStudent");
 const { updateCronSchedule } = require("../services/cfCronService");
+const CronConfig = require("../models/cronModel");
+const SyncMeta = require("../models/syncMeta");
 
-const syncMeta = require("../models/syncMeta");
+
 const router = express.Router();
 
 router.post("/postStudentDetail", studentPostController);
@@ -14,11 +16,36 @@ router.get("/getAllStudents", getStudentDetails);
 router.get("/particularStudent/:studentId", particularStudentController);
 router.put("/updateStudent/:id", updateStudent);
 router.delete("/deleteStudent/:id", deleteStudent);
-router.post("/update-cron", (req, res) => {
-  const { schedule } = req.body; // e.g., "0 4 * * *" for 4 AM
-  updateCronSchedule(schedule);
-  res.json({ message: `Cron updated to ${schedule}` });
+// router.post("/update-cron")
+router.post("/update-cron", async (req, res) => {
+  const { schedule } = req.body;
+
+  try {
+    await updateCronSchedule(schedule);
+    res.json({ message: `Cron updated to ${schedule}` });
+  } catch (err) {
+    console.error("Cron update failed:", err.message);
+    res.status(500).json({ message: "Failed to update cron schedule" });
+  }
 });
+
+
+
+router.get("/cron-status", async (req, res) => {
+  try {
+    const config = await CronConfig.findOne();
+    const meta = await SyncMeta.findOne();
+
+    res.json({
+      schedule: config?.schedule || "0 2 * * *",
+      lastSynced: meta?.lastSynced || null,
+    });
+  } catch (err) {
+    console.error("Error fetching cron status:", err.message);
+    res.status(500).json({ message: "Failed to fetch cron status" });
+  }
+});
+
 // in routes/test.js or index.js temporarily
 router.get("/test-fetch", async (req, res) => {
   const { fetchAndUpdateAllStudents } = require("./../services/cfFetcher");

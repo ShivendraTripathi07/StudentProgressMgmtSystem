@@ -37,6 +37,20 @@ const Home = () => {
 
   // API Base URL - adjust this to match your backend
   const API_BASE = "http://localhost:8000/student"; // Change this to your actual API base URL
+  const [cronSchedule, setCronSchedule] = useState("");
+
+  const fetchCronStatus = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/cron-status`);
+      const data = await res.json();
+      setCronSchedule(data.schedule);
+      if (data.lastSynced) {
+        setLastSynced(new Date(data.lastSynced));
+      }
+    } catch (err) {
+      console.error("Failed to fetch cron status:", err.message);
+    }
+  };
 
   // Fetch all students
 
@@ -210,15 +224,10 @@ const Home = () => {
     : [];
 
   // Last SYnced
-  const getLastSync = async () => {
-    const res = await fetch(`${API_BASE}/last-sync`);
 
-    setLastSynced(new Date(res.data?.lastSynced));
-    console.log(lastSynced);
-  };
   useEffect(() => {
     fetchStudents();
-    getLastSync();
+    fetchCronStatus();
   }, []);
 
   if (loading) {

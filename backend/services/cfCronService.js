@@ -1,20 +1,46 @@
-// services/cfCronService.js
 const cron = require("node-cron");
 const { fetchAndUpdateAllStudents } = require("./cfFetcher.js");
+const CronConfig = require("../models/cronModel.js");
 
-let cronSchedule = "0 2 * * *"; // 2 AM daily
 let cronJob;
 
-const startCronJob = (schedule = cronSchedule) => {
-  if (cronJob) cronJob.stop(); // Stop existing job if any
+// Default fallback schedule
+const defaultSchedule = "0 2 * * *";
+
+// Load from DB and start job
+const startCronJob = async () => {
+  let schedule = defaultSchedule;
+
+  const config = await CronConfig.findOne();
+  if (config && config.schedule) {
+    schedule = config.schedule;
+  }
+
+  if (cronJob) cronJob.stop();
   cronJob = cron.schedule(schedule, async () => {
-    console.log("[CRON] Running scheduled CF data sync...");
+    console.log(`[CRON] Running scheduled CF data sync at ${schedule}`);
     await fetchAndUpdateAllStudents();
   });
+
+  console.log(`[CRON] Job started with schedule: ${schedule}`);
 };
 
-const updateCronSchedule = (newSchedule) => {
-  cronSchedule = newSchedule;
-  startCronJob(newSchedule);
+// Update schedule and persist to DB
+const updateCronSchedule = async (newSchedule) => {
+  if (cronJob) cronJob.stop();
+
+  cronJob = cron.schedule(newSchedule, async () => {
+    console.log(`[CRON] Running scheduled CF data sync at ${newSchedule}`);
+    await fetchAndUpdateAllStudents();
+  });
+
+  await CronConfig.findOneAndUpdate(
+    {},
+    { schedule: newSchedule },
+    { upsert: true, new: true }
+  );
+
+  console.log(`[CRON] Schedule updated to: ${newSchedule}`);
 };
+
 module.exports = { startCronJob, updateCronSchedule };

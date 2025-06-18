@@ -238,16 +238,4 @@ Modify `cronService.js` to adjust:
 
 ---
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Support
-
-For questions, issues, or contributions:
-
-- Create an issue on GitHub
-- Contact the development team
-- Check the documentation in the `/docs` folder
