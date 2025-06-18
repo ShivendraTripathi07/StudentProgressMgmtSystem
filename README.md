@@ -4,6 +4,10 @@ A comprehensive full-stack MERN web application designed to manage students and 
 
 ---
 
+## Demo Walkthrough video link of the project
+
+https://drive.google.com/file/d/15wpMLvuw_PYv79ZVd1er27m40DGnZJhF/view?usp=sharing
+
 ## 🚀 Features
 
 ### 🧍 Student Management Dashboard
@@ -237,5 +241,3 @@ Modify `cronService.js` to adjust:
 5. Open a Pull Request
 
 ---
-
-
